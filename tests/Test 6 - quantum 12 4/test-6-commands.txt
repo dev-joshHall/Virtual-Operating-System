@@ -1,0 +1,86 @@
+Josh OS Shell shell1
+> setrr 6 4    
+> setsched mlq 
+Setting scheduling algorithm to MLQ
+> execute ioBound.osx 0 int-lg.osx 0
+Finished loading iobound.osx at location 100 and time 0.
+Z: 49
+Finished loading int-lg.osx at location 20 and time 4.
+Z: 48
+Z: 47
+Z: 19
+Z: 46
+Z: 18
+Z: 45
+Z: 17
+Z: 44
+Z: 16
+Z: 43
+Z: 42
+Z: 15
+Z: 41
+Z: 40
+Z: 14
+Z: 39
+Z: 38
+Z: 13
+Z: 37
+Z: 36
+Z: 12
+Z: 35
+Z: 11
+Z: 34
+Z: 10
+Z: 33
+Z: 9
+Z: 32
+Z: 8
+Z: 31
+Z: 7
+Z: 30
+Z: 6
+Z: 29
+Z: 5
+Z: 28
+Z: 4
+Z: 27
+Z: 3
+Z: 26
+Z: 2
+Z: 25
+Z: 1
+Z: 24
+Z: 0
+Z: 23
+Z: 22
+Z: 21
+Z: 20
+Z: 19
+Z: 18
+Z: 17
+Z: 16
+Z: 15
+Z: 14
+Z: 13
+Finished running int-lg.osx at time 515.
+Z: 12
+Z: 11
+Z: 10
+Z: 9
+Z: 8
+Z: 7
+Z: 6
+Z: 5
+Z: 4
+Z: 3
+Z: 2
+Z: 1
+Z: 0
+Finished running iobound.osx at time 555.
+> gantt
+Gantt chart results writen to "gantt-results.txt"
+> coredump
+...
+terminated processes: 2
+        Process(p_id='2', file_name='int-lg.osx', arrival_time='0', finish_time='515', running_time='403', waiting_time='112', response_time='4', turnaround_time='515')
+        Process(p_id='1', file_name='iobound.osx', arrival_time='0', finish_time='555', running_time='152', waiting_time='403', response_time='0', turnaround_time='555')
