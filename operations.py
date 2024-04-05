@@ -234,7 +234,7 @@ class Operations:
             self.process.verbose_results.add(f'reg {reg1} <- result ({result})')
         self.process.registers.set_reg(reg1, int.to_bytes(result))
 
-    def swi(self, imm: bytes):
+    def swi(self, imm: bytes, message: bytes=None):
         """
         Software Interrupt
         run interrupt imm
@@ -262,7 +262,10 @@ class Operations:
                 self.process.errors.append(ErrorMessage('SwiError', 'SWI code {imm_int}'))
             case 4: # wait system call
                 print(Fore.BLUE, end='')
-                print('Waiting...')
+                print(f'Process {self.process.p_id} Waiting...')
+            case 5: # signal system call
+                print(Fore.BLUE, end='')
+                print(f'Process {self.process.p_id} Signaling...')
         self.process.hit_swi = True # added this
 
     def bl(self, lbl):

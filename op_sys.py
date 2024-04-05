@@ -7,6 +7,7 @@ import subprocess
 from errorMessage import ErrorMessage
 from schedulingMethod import SchedulingMethod, FCFS, RR, MLQ
 from colorama import Fore
+from semaphore import Semaphore
 
 class Shell:
 	def __init__(self, op_sys, name: str) -> None:
@@ -216,12 +217,14 @@ class OpSys:
 		self.running_item = None
 		# self.waiting_queue: list = []
 		self.terminated_items: list = []
+		self.message_queue_semaphore: Semaphore = Semaphore()
 		self.fcfs: SchedulingMethod = FCFS(self)
 		self.rr: SchedulingMethod = RR(self, quantum=10)
 		self.mlq: SchedulingMethod = MLQ(self, quantum1=10, quantum2=20)
 		self.scheduling_method: SchedulingMethod = self.rr
 		self.page_size: int = 36
 		self.memory = None
+		self.page_table = {}
 		self.active_shell: Shell = Shell(self, 'shell1')
 		self.shells.append(self.active_shell)
 		self.memory = Memory(self.active_shell.process)

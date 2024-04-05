@@ -110,6 +110,12 @@ class Process:
 	def garbage_cleanup(self) -> None:
 		self.op_sys.memory.clean(self.pcb.memory_l_limit, self.pcb.memory_u_limit)
 
+	def send(self, message):
+		pass
+
+	def receive(self):
+		print()
+
 	def preload(self) -> bool:
 		try:
 			with open(self.file_name, 'rb') as f:
