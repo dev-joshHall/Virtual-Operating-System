@@ -217,6 +217,7 @@ class OpSys:
 		self.running_item = None
 		# self.waiting_queue: list = []
 		self.terminated_items: list = []
+		self.message_queues = {}
 		self.message_queue_semaphore: Semaphore = Semaphore()
 		self.fcfs: SchedulingMethod = FCFS(self)
 		self.rr: SchedulingMethod = RR(self, quantum=10)
@@ -230,6 +231,25 @@ class OpSys:
 		self.memory = Memory(self.active_shell.process)
 		self.active_shell.process.memory = self.memory
 		self.active_shell.run_shell()
+
+	def receive_message(self, process_id: int, message: bytes):
+		self.message_queue_semaphore.wait()
+		if process_id in self.message_queues:
+			self.message_queues[process_id].append(message)
+		else:
+			self.message_queues[process_id] = [message]
+		self.message_queue_semaphore.signal()
+
+	def signal_message(self, process_id: int, message: bytes):
+		self.message_queue_semaphore.wait()
+		if process_id in self.message_queues:
+			if message in self.message_queues[process_id]:
+				self.message_queues[process_id].remove(message)
+			else:
+				print(f"Message '{message}' not found in process {process_id}'s message queue.")
+		else:
+			print(f"Process {process_id} does not have any messages.")
+		self.message_queue_semaphore.signal()
 
 	def run_next_process(self) -> bool:
 		return self.scheduling_method.run()
