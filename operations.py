@@ -1,5 +1,6 @@
 from errorMessage import ErrorMessage
 from colorama import Fore
+from random import randint
 
 class Operations:
 
@@ -262,10 +263,14 @@ class Operations:
                 self.process.errors.append(ErrorMessage('SwiError', 'SWI code {imm_int}'))
             case 4: # wait system call
                 print(Fore.BLUE, end='')
-                print(f'Process {self.process.p_id} Waiting...')
+                self.process.verbose_results.add(f'Process {self.process.p_id} Waiting...')
+                message: bytes = self.process.op_sys.receive_message()
+                self.process.verbose_results.add(f'Process {self.process.p_id} received message "{message}".')
             case 5: # signal system call
                 print(Fore.BLUE, end='')
-                print(f'Process {self.process.p_id} Signaling...')
+                message: bytes = int.to_bytes(randint(15))
+                self.process.verbose_results.add(f'Process {self.process.p_id} signaling random number "{message}".')
+                self.process.op_sys.signal_message(message)
         self.process.hit_swi = True # added this
 
     def bl(self, lbl):
