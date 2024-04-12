@@ -119,7 +119,7 @@ class Process:
 	def preload(self) -> bool:
 		try:
 			with open(self.file_name, 'rb') as f:
-				file = f.read()
+				# file = f.read() # warning! debug only!
 				byte_size = int.from_bytes(f.read(1))
 				f.read(3)
 				pc = f.read(4) # skip pc

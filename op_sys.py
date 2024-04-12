@@ -2,6 +2,7 @@ from process import Process
 from memory import Memory
 import os
 import sys
+from test import Test
 from clock import Clock
 import subprocess
 from errorMessage import ErrorMessage
@@ -210,7 +211,6 @@ class Shell:
 class OpSys:
 	def __init__(self) -> None:
 		sys.setrecursionlimit(10**6)
-		#TODO: can simplify to just ready queue and running item
 		self.shells: list[Shell] = []
 		#self.new_queue: list = []
 		self.ready_queue: list = []
@@ -230,16 +230,20 @@ class OpSys:
 		self.shells.append(self.active_shell)
 		self.memory = Memory(self.active_shell.process)
 		self.active_shell.process.memory = self.memory
+		self.message_queue_semaphore = Test()
 		self.active_shell.run_shell()
 
 	def signal_message(self, message: bytes, process=None):
-		self.message_queue_semaphore.wait(process)
+		self.message_queue_semaphore.wait()
 		self.message_queue.append(message)
 		self.message_queue_semaphore.signal()
 
 	def receive_message(self) -> bytes:
 		self.message_queue_semaphore.wait()
-		result = self.message_queues.pop()
+		try:
+			result = self.message_queue.pop()
+		except:
+			pass
 		self.message_queue_semaphore.signal()
 		return result
 

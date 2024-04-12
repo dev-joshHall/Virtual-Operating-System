@@ -265,13 +265,21 @@ class Operations:
                 print(Fore.BLUE, end='')
                 self.process.verbose_results.add(f'Process {self.process.p_id} Waiting...')
                 message: bytes = self.process.op_sys.receive_message()
-                self.process.verbose_results.add(f'Process {self.process.p_id} received message "{message}".')
+                if self.process.verbose:
+                    print(Fore.LIGHTMAGENTA_EX, end='')
+                    print(f'Process {self.process.p_id} received message "{message}".')
+                    print('message queue: ', end='')
+                    print(self.process.op_sys.message_queue)
             case 5: # signal system call
                 print(Fore.BLUE, end='')
-                message: bytes = int.to_bytes(randint(15))
-                self.process.verbose_results.add(f'Process {self.process.p_id} signaling random number "{message}".')
+                message: bytes = int.to_bytes(randint(0, 15))
+                if self.process.verbose:
+                    print(Fore.LIGHTMAGENTA_EX, end='')
+                    print(f'Process {self.process.p_id} signaling random number "{message}".')
+                    print('message queue: ', end='')
+                    print(self.process.op_sys.message_queue)
                 self.process.op_sys.signal_message(message)
-        self.process.hit_swi = True # added this
+        self.process.hit_swi = True
 
     def bl(self, lbl):
         """

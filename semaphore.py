@@ -1,18 +1,18 @@
+from mutex import Mutex
 
 class Semaphore:
     def __init__(self, initial_value: int = 1):
         self.value = initial_value
+        self.mutex_lock = Mutex()
 
     def wait(self, process=None):
-        if self.value <= 0:
-            process.clock_tick()
-            for p in process.shell.processes:
-                p.update_stats()
-            if process.op_sys.scheduling_method is self.op_sys.rr:
-                process.op_sys.rr.track_gantt()
-            self.to_ready(True) # Go to waiting queue and do not increase pcb pc
-            return
+        while self.value <= 0:
+            pass # Busy waiting
+        self.mutex_lock.acquire()
         self.value -= 1 # continue to receive message and continue program
+        self.mutex_lock.release()
 
     def signal(self):
+        self.mutex_lock.acquire()
         self.value += 1
+        self.mutex_lock.release()
