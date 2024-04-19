@@ -241,7 +241,7 @@ class OpSys:
 	def receive_message(self) -> bytes:
 		self.message_queue_semaphore.wait()
 		try:
-			result = self.message_queue.pop()
+			result = self.message_queue.pop(0)
 		except:
 			pass
 		self.message_queue_semaphore.signal()
