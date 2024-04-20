@@ -9,12 +9,15 @@ from errorMessage import ErrorMessage
 from schedulingMethod import SchedulingMethod, FCFS, RR, MLQ
 from colorama import Fore
 from semaphore import Semaphore
+from page_table import PageTable
+from disk import Disk
 
 class Shell:
 	def __init__(self, op_sys, name: str) -> None:
 		self.op_sys: OpSys = op_sys
 		self.clock = Clock(0)
 		self.processes: list[Process] = [Process(self.op_sys, self, 0, False, '')]
+		self.has_loaded = False
 		# set active process
 		self.process = self.processes[0]
 		self.name: str = name
@@ -26,6 +29,9 @@ class Shell:
 			0: 'kernel',
 			1: 'user'
 		}
+
+	def test(self):
+		self.op_sys.message_queue_semaphore = Test()
 
 	def user_mode(self) -> None:
 		self.mode = 1
@@ -55,6 +61,7 @@ class Shell:
 		return text.strip().lower()
 	
 	def run_shell(self) -> None:
+		self.test()
 		while True:
 			c = self.get_user_input()
 			if c == 0:
@@ -111,13 +118,14 @@ class Shell:
 				except:
 					self.process.errors.append(ErrorMessage('OsxError', f'failed to run osx command "{u_input}".'))
 			elif command == 'load':
+				self.has_loaded = True
 				self.process.file_name = f_name
 				self.process.load()
 			elif command == 'run':
 				self.process.file_name = f_name
-				self.process.run()
+				self.process.run(is_execute=False)
 			elif command == 'execute':
-				# TODO: haddle additional files and arrival times
+				self.has_loaded = True
 				# create processes
 				self.processes = []
 				self.op_sys.mlq.queues.clear_gantt()
@@ -181,6 +189,14 @@ class Shell:
 				self.process.error_dump()
 			elif command in ('cls', 'clear'):
 				os.system('cls')
+			elif command in ('setpagesize', 'setps', 'sps'):
+				self.op_sys.set_page_size(parts[1])
+			elif command in ('getpagesize', 'getps', 'gps'):
+				print(Fore.WHITE, end='')
+				print(f'Page size is set to {self.op_sys.get_page_size()}')
+			elif command in ('getlogicaladdress', 'getla', 'getlogicaladdr', 'getlogicaddr', 'gla'):
+				print(Fore.WHITE, end='')
+				print(f'Logical address is {self.op_sys.get_logical_addr()}')
 			elif 'shell' in command:
 				name = parts[-1]
 				shell = self.op_sys.get_shell(name)
@@ -225,13 +241,36 @@ class OpSys:
 		self.scheduling_method: SchedulingMethod = self.rr
 		self.page_size: int = 36
 		self.memory = None
-		self.page_table = {}
+		self.page_table = PageTable(self)
 		self.active_shell: Shell = Shell(self, 'shell1')
 		self.shells.append(self.active_shell)
+		self.logical_address = self.get_logical_addr()
 		self.memory = Memory(self.active_shell.process)
+		self.disk = Disk(self.memory)
+		self.active_shell.process.disk = self.disk
 		self.active_shell.process.memory = self.memory
-		self.message_queue_semaphore = Test()
 		self.active_shell.run_shell()
+
+	def get_logical_addr(self) -> int:
+		offset: int = self.active_shell.process.offset
+		page_number: int = self.active_shell.process.page_number
+		return page_number * self.page_size + offset
+
+	def set_page_size(self, size: str) -> None:
+		if self.active_shell.has_loaded or self.ready_queue or self.running_item or self.terminated_items:
+			print(Fore.RED, end='')
+			print('Cannot set page size when items have already loaded or run.')
+			return
+		if not size.isdigit():
+			print(Fore.RED, end='')
+			print('Cannot set page size to a non-integer value.')
+			return
+		self.page_size = int(size)
+		print(Fore.BLUE, end='')
+		print(f'Page size set to {size}.')
+
+	def get_page_size(self) -> int:
+		return self.page_size
 
 	def signal_message(self, message: bytes, process=None):
 		self.message_queue_semaphore.wait()

@@ -32,6 +32,8 @@ class Process:
 		self.verbose = verbose
 		self.verbose_results = VerboseMessage("")
 		self.file_name = file_name
+		self.offset = 0
+		self.page_number = 0
 		self.registers = Registers()
 		self.p_id = p_id
 		self.response_time = 0
@@ -49,7 +51,6 @@ class Process:
 		self.is_running = False
 		# resume time is the time that the program last started or resumed
 		self.resume_time = self.arrival_time
-		# TODO: fix PCB
 		self.pcb: PCB = PCB(self.file_name, 0, 0, self.registers.pc(), 0, 1000, [])
 		# error for div by zero
 		# error for memory overlap
@@ -98,6 +99,11 @@ class Process:
 			self.response_time += 1
 		if self.is_running and self is self.op_sys.running_item:
 			self.running_time += 1
+		self.page_number = self.registers.pc() // self.op_sys.get_page_size()
+		if self.page_number > 0:
+			self.offset = self.registers.pc() % self.op_sys.get_page_size()
+		else:
+			self.offset = self.registers.pc()
 
 	def clear_file_details(self) -> None:
 		self.file_details = OsxFileDetails(
@@ -135,6 +141,7 @@ class Process:
 	def load(self) -> None:
 		#TODO: don't load process until its arrival time
 		self.pcb.state = 0
+		self.registers = Registers()
 		self.verbose_results.clear()
 		self.verbose_results.add('')
 		try:
@@ -161,6 +168,7 @@ class Process:
 				self.pcb.pc = self.registers.pc()
 				self.pcb.memory_u_limit = int(self.file_details.loader) + int(self.file_details.byte_size)
 				self.pcb.memory_l_limit = int(self.file_details.loader)
+				self.page_number = self.registers.pc() // self.op_sys.get_page_size()
 				# double memory size if there is not a memory location for the program
 				while self.pcb.memory_u_limit + 6 >= len(self.memory.main_memory) * 6:
 					self.memory.double_size()
@@ -296,7 +304,9 @@ class Process:
 		self.load()
 		self.run(False if self.op_sys.scheduling_method is self.op_sys.mlq else True)
 
-	def run(self, is_not_mlq=True) -> None:
+	def run(self, is_not_mlq=True, is_execute=True) -> None:
+		if not is_execute and not self.is_running:
+			self.load()
 		self.verbose_results.clear()
 		self.verbose_results.add('')
 		self.is_running = True
@@ -422,12 +432,17 @@ class Process:
 						error = True
 				self.registers.pc( self.registers.pc() + 6 )
 				self.clock_tick()
+				self.page_number = self.registers.pc() // self.op_sys.get_page_size()
+				if self.page_number > 0:
+					self.offset = self.registers.pc() % self.op_sys.get_page_size()
+				else:
+					self.offset = self.pcb.pc
 				for p in self.shell.processes:
 					p.update_stats()
-				if self.op_sys.scheduling_method is self.op_sys.rr:
+				if is_execute and self.op_sys.scheduling_method is self.op_sys.rr:
 					self.op_sys.rr.track_gantt()
 				# check how long process has been running
-				if self.shell.clock.get_value() >= self.resume_time + self.quantum or self.hit_swi: #TODO: change to >?
+				if is_execute and (self.shell.clock.get_value() >= self.resume_time + self.quantum or self.hit_swi): #TODO: change to >?
 					self.to_ready(is_not_mlq)
 					return
 		except:
@@ -436,7 +451,7 @@ class Process:
 		if self.verbose:
 			print(Fore.WHITE, end='')
 			print(self.verbose_results)
-		if self.file_details.byte_size != 0 and self not in self.op_sys.terminated_items:
+		if (self.file_details.byte_size != 0 and self not in self.op_sys.terminated_items) or not is_execute:
 			print(Fore.GREEN, end='')
 			print(f'Finished running {self.file_name} at time {self.clock.get_value()}.')
 			self.is_running = False # must reload to run again

@@ -9,6 +9,7 @@ class Memory:
 		#     (row1) [...]
 		#     ...
 		# ]
+		self.page_count = 0
 		self.main_memory = [[b'\x00' for x in range(6)] for y in range(100)]
 		self.next_location = [0, 0] # location to add next byte in memory (r,c)
 		self.process = process
@@ -74,9 +75,10 @@ class Memory:
 		print(Fore.BLUE, end='')
 		counter = 0
 		for row in self.main_memory:
+			page_number: int = self.get_page_number(counter)
 			if len(list(filter(lambda i: i != b'\x00', row))) > 0:
 				print(Back.WHITE, end='')
-			print(f'({counter})', end=' ')
+			print(f'(Page={page_number}, Addr={counter}, FreePage={self.page_is_free(page_number)})', end='\t')
 			print(row)
 			print(Back.RESET, end='')
 			counter += 6
@@ -85,6 +87,9 @@ class Memory:
 		print(f'terminated processes: {len(self.process.op_sys.terminated_items)}')
 		for p in self.process.op_sys.terminated_items:
 			print('\t' + str(p))
+		print(f'Total Pages:\t{self.get_page_count()}')
+		print(f'Free Pages:\t{self.get_free_pages()}')
+		print(f'Ocupied Pages:\t{self.get_full_pages()}')
 
 	def row_is_empty(self, r: int) -> bool:
 		row = self.main_memory[r]
@@ -104,3 +109,30 @@ class Memory:
 			return
 		for i in range(lower_bound, upper_bound):
 			self.main_memory[self.get_row(i)] = [b'\x00' for x in range(6)]
+
+	def page_is_free(self, p_number: int) -> bool:
+		page_start: int = p_number * self.process.op_sys.page_size
+		page_end: int = page_start + self.process.op_sys.page_size
+		try:
+			return self.is_free(page_start, page_end - 6)
+		except IndexError:
+			return True
+	
+	def get_page_number(self, addr: int) -> int:
+		return addr // self.process.op_sys.page_size
+
+	def get_free_pages(self) -> int:
+		free: int = 0
+		self.page_count = 0
+		for page in range(0, ((len(self.main_memory) * 6) // self.process.op_sys.page_size) + 1):
+			self.page_count += 1
+			if self.page_is_free(page):
+				free += 1
+		return free
+
+	def get_full_pages(self) -> int:
+		return self.get_page_count() - self.get_free_pages()
+
+	def get_page_count(self) -> int:
+		self.get_free_pages()
+		return self.page_count
