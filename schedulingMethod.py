@@ -30,7 +30,6 @@ class FCFS(SchedulingMethod):
 					has_space.append(p)
 			except IndexError: # memory for item has not been created (memory is free)
 				has_space.append(p)
-		# TODO: allow process to reoccupy its own position
 		if has_space:
 			next_process = self.op_sys.ready_queue.pop(self.op_sys.ready_queue.index(has_space[0]))
 			next_process.pcb.state = 2
@@ -89,7 +88,6 @@ class RR(SchedulingMethod):
 					has_space.append(p)
 			except IndexError: # memory for item has not been created (memory is free)
 				has_space.append(p)
-		# TODO: allow process to reoccupy its own position
 		if has_space:
 			next_process = self.op_sys.ready_queue.pop(self.op_sys.ready_queue.index(has_space[0]))
 			# Rerun process and update variables

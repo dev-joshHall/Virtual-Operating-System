@@ -104,7 +104,6 @@ class Shell:
 			command = parts[0]
 			f_name = parts[-1]
 			self.process.verbose = verbose
-			#TODO: add compile option using osx
 			if command in ('osx', 'osx.exe'):
 				f_name = parts[1]
 				load_addr = parts[2]
@@ -228,10 +227,8 @@ class OpSys:
 	def __init__(self) -> None:
 		sys.setrecursionlimit(10**6)
 		self.shells: list[Shell] = []
-		#self.new_queue: list = []
 		self.ready_queue: list = []
 		self.running_item = None
-		# self.waiting_queue: list = []
 		self.terminated_items: list = []
 		self.message_queue = []
 		self.message_queue_semaphore: Semaphore = Semaphore()
