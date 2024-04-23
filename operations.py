@@ -273,12 +273,12 @@ class Operations:
             case 5: # signal system call
                 print(Fore.BLUE, end='')
                 message: bytes = int.to_bytes(randint(0, 15))
+                self.process.op_sys.signal_message(message)
                 if self.process.verbose:
                     print(Fore.LIGHTMAGENTA_EX, end='')
                     print(f'Process {self.process.p_id} signaling random number "{message}".')
                     print('message queue: ', end='')
                     print(self.process.op_sys.message_queue)
-                self.process.op_sys.signal_message(message)
         self.process.hit_swi = True
 
     def bl(self, lbl):
